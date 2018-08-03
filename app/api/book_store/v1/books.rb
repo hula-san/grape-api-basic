@@ -4,6 +4,7 @@ module BookStore
       version 'v1', using: :path
       format :json
       prefix :api
+
       resource :books do
         desc 'Return list of books'
         get do
@@ -11,30 +12,31 @@ module BookStore
           present books, with: BookStore::Entities::Index
         end
 
-        desc 'Return a specific book'        
         route_param :id do
+          desc 'Return a specific book'        
           get do
             book = Book.find(params[:id])
             present book, with: BookStore::Entities::Book
-          end
+          end 
         end
-      end
 
-      resource :flows do
-       desc 'Create a flow.'
-        params do
-          requires :flow, type: Hash do
-            requires :newStock, type: Integer, desc: 'New Stock.'
-            requires :previousStock, type: Integer, desc: 'Previous Stock.'
-          end
+        resource :flows do
+          desc 'Create a flow.'
+            params do
+              requires :flow, type: Hash do
+                requires :newStock, type: Integer, desc: 'New Stock.'
+                requires :previousStock, type: Integer, desc: 'Previous Stock.'
+              end
+            end
+            post do
+              @book = Book.find(params[:id])
+              @flow = Flow.new(params[:flow])
+              @flow = @book.flows.create!(params[:flow])
+              @book.update(stock: @flow.newStock)
+            end
         end
-        post do
-          @book = Book.find(params[:id])
-          @flow = Flow.new(params[:flow])
-          @flow = @book.flows.create!(params[:flow])
-          @book.update(stock: @flow.newStock)
-        end
-      end # end of return a specific book
+
+      end
     end
   end
 end
